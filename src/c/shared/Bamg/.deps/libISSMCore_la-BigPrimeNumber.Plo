@@ -1,0 +1,7 @@
+./shared/Bamg/libISSMCore_la-BigPrimeNumber.lo: \
+  shared/Bamg/BigPrimeNumber.cpp shared/Bamg/./Abs.h \
+  shared/Bamg/./extrema.h
+
+shared/Bamg/./Abs.h:
+
+shared/Bamg/./extrema.h:

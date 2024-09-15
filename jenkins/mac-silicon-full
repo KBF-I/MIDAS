@@ -1,0 +1,89 @@
+# NOTE: 
+# - This configuration adds solid earth and Dakota capabilities to the basic 
+#	build.
+# - Currently, this configuration does not compile the MATLAB and Python 
+#	APIs. After compiling, you will need to download the ISSM pre-compiled 
+#	binaries from https://issm.jpl.nasa.gov/download/binaries, copy the 
+#	contents of lib/ to $ISSM_DIR/lib-precompiled, then add 
+#	$ISSM_DIR/lib-precompiled to the path in MATLAB or Python.
+#
+
+#--------------------#
+# ISSM Configuration #
+#--------------------#
+
+ISSM_CONFIG='\
+	--prefix=${ISSM_DIR} \
+	--disable-static \
+	--enable-development \
+	--enable-debugging \
+	--without-wrappers \
+	--with-numthreads=8 \
+	--with-fortran-lib="-L/opt/homebrew/Cellar/gcc/12.2.0/lib/gcc/12 -lgfortran" \
+	--with-mpi-include=${ISSM_EXT_DIR}/shared/petsc/install/include \
+	--with-mpi-libflags="-L${ISSM_EXT_DIR}/shared/petsc/install/lib -lmpi -lmpicxx -lmpifort" \
+	--with-blas-lapack-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-metis-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-parmetis-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-scalapack-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-mumps-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-hdf5-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-petsc-dir=${ISSM_EXT_DIR}/shared/petsc/install \
+	--with-gsl-dir=${ISSM_EXT_DIR}/shared/gsl/install \
+	--with-boost-dir=${ISSM_EXT_DIR}/shared/boost/install \
+	--with-dakota-dir=${ISSM_EXT_DIR}/shared/dakota/install \
+	--with-proj-dir=${ISSM_EXT_DIR}/shared/proj/install \
+	--with-triangle-dir=${ISSM_EXT_DIR}/shared/triangle/install \
+	--with-chaco-dir=${ISSM_EXT_DIR}/chaco/install \
+	--with-m1qn3-dir=${ISSM_EXT_DIR}/m1qn3/install \
+	--with-semic-dir=${ISSM_EXT_DIR}/semic/install \
+'
+
+#-------------------#
+# External Packages #
+#-------------------#
+
+EXTERNALPACKAGES="
+	autotools	install-mac.sh
+	cmake		install.sh
+	petsc		install-3.17-mac-silicon.sh
+	gsl			install.sh
+	boost		install-1.7-mac.sh
+	dakota		install-6.2-mac.sh
+	curl		install-7-mac.sh
+	netcdf		install-4.7-parallel.sh
+	proj		install-6.sh
+	gdal		install-3-python.sh
+	gshhg		install.sh
+	gmt			install-6-mac-silicon.sh
+	gmsh		install-4-mac.sh
+	triangle	install-mac.sh
+	chaco		install-mac.sh
+	m1qn3		install.sh
+	semic		install.sh
+	shell2junit	install.sh
+"
+
+#---------#
+# Testing #
+#---------#
+
+# Test suites
+MATLAB_TEST=0
+PYTHON_TEST=0
+JAVASCRIPT_TEST=0
+EXAMPLES_TEST=0
+
+# Number of CPUs used in ISSM compilation
+#
+# NOTE: One is usually safer as some packages are very sensitive to parallel
+# 		compilation
+#
+NUMCPUS_INSTALL=8
+
+# Number of CPUs used in the nightly runs
+NUMCPUS_RUN=1
+
+# Nightly run options
+MATLAB_NROPTIONS=""
+PYTHON_NROPTIONS=""

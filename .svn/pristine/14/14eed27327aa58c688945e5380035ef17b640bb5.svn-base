@@ -1,0 +1,9 @@
+--- Source/CPack/cmCPackDragNDropGenerator.cxx_orig	2017-08-29 08:45:50.000000000 +0200
++++ Source/CPack/cmCPackDragNDropGenerator.cxx	2017-08-29 08:46:04.000000000 +0200
+@@ -12,6 +12,7 @@
+ #include <iomanip>
+ #include <map>
+ #include <stdlib.h>
++#include <algorithm>
+
+ #include <CoreFoundation/CoreFoundation.h>

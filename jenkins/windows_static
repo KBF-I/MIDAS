@@ -1,0 +1,65 @@
+
+#-------------------------------#
+# 1: ISSM general configuration #
+#-------------------------------#
+
+#MATLAB path
+MATLAB_PATH="/cygdrive/c/Programs/MATLAB/R2015a/"
+
+#ISSM CONFIGURATION
+ISSM_CONFIG='--prefix=$ISSM_DIR \
+	--disable-static \
+	--enable-standalone-executables \
+	--enable-standalone-libraries \
+	--with-matlab-dir=$MATLAB_PATH \
+	--with-vendor=MSVC-Win64 \
+	--with-fortran=no \
+	--without-Sealevelchange \
+	--without-Love \
+	--without-kriging \
+	--without-kml \
+	--with-petsc-dir=$ISSM_DIR/externalpackages/petsc/install \
+	--with-blas-lapack-dir=$ISSM_DIR/externalpackages/petsc/install/lib  \
+	--with-mpi-libdir=$ISSM_DIR/externalpackages/petsc/install/lib \
+	--with-mpi-libflags="-Wl,libpetsc.lib" \
+	--with-metis-dir=$ISSM_DIR/externalpackages/metis/install \
+	--with-triangle-dir=$ISSM_DIR/externalpackages/triangle/install \
+	--with-math77-dir=$ISSM_DIR/externalpackages/math77/install \
+	--with-mpi-include="$ISSM_DIR/externalpackages/petsc/install/include/petsc/mpiuni" \
+	--with-cxxoptflags="-fp:strict"'
+
+#PYTHON and MATLAB testing
+MATLAB_TEST=0
+PYTHON_TEST=0
+
+#-----------------------------------#
+# 3: External packages installation #
+#-----------------------------------#
+
+#List of external packages to be installed and their installation scripts
+EXTERNALPACKAGES="autotools   install-win.sh
+					petsc       install-3.6-win10.sh
+					metis       install-4.0-win10.sh
+					triangle    install-win10.sh
+					math77		install.sh
+					gmt			install-win64-precompiled.sh
+					gmsh 		install-win64-precompiled.sh
+					shell2junit install.sh"
+
+#-----------------#
+# 4: test options #
+#-----------------#
+
+#number of cpus used in ISSM installation and compilation (one is usually
+#safer as some packages are very sensitive to parallel compilation)
+NUMCPUS_INSTALL=8
+
+#number of cpus used in the nightly runs.
+NUMCPUS_RUN=8
+
+#Nightly run options. The matlab routine runme.m will be called
+#as follows: runme($MATLAB_NROPTIONS). The options must be understandable
+#by Matlab and runme.m
+#ex: "'id',[101 102 103]"
+MATLAB_NROPTIONS=""
+PYTHON_NROPTIONS=""

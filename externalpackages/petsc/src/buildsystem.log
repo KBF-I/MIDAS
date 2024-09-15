@@ -1,0 +1,6 @@
+    Loaded configure to cache: size 463109
+Executing: otool -D /Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/src/arch-darwin-c-opt/lib/libpetsc.3.17.4.dylib
+stdout:
+/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/src/arch-darwin-c-opt/lib/libpetsc.3.17.4.dylib:
+/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/src/arch-darwin-c-opt/lib/libpetsc.3.17.dylib
+Executing: /usr/bin/install_name_tool -id /Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/lib/libpetsc.3.17.dylib /Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/lib/libpetsc.3.17.4.dylib

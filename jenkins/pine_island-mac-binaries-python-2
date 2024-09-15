@@ -1,0 +1,92 @@
+#--------------------#
+# ISSM Configuration #
+#--------------------#
+
+# NOTE:
+# - We can disable dependency tracking in the Autotools because the binaries
+#	should always be a one-time build.
+#
+# TODO:
+# - Add static copy of libsqlite and make sure it is found during GMT configuration
+#
+
+# ISSM CONFIGURATION
+ISSM_CONFIG='\
+	--prefix=${ISSM_DIR} \
+	--enable-standalone-executables \
+	--enable-standalone-modules \
+	--enable-standalone-libraries \
+	--disable-dependency-tracking \
+	--with-python-dir=/System/Library/Frameworks/Python.framework/Versions/2.7 \
+	--with-python-numpy-dir=/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy \
+	--with-fortran-lib="/usr/local/Cellar/gcc/11.3.0/lib/gcc/11/libgfortran.a /usr/local/Cellar/gcc/11.3.0/lib/gcc/11/libquadmath.a /usr/local/Cellar/gcc/11.3.0/lib/gcc/11/gcc/x86_64-apple-darwin15/11/libgcc.a" \
+	--with-mpi-include=${ISSM_DIR}/externalpackages/petsc/install/include \
+	--with-mpi-libflags="-L${ISSM_DIR}/externalpackages/petsc/install/lib -lmpi -lmpicxx -lmpifort" \
+	--with-blas-lapack-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-metis-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-parmetis-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-scalapack-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-mumps-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-hdf5-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-petsc-dir=${ISSM_DIR}/externalpackages/petsc/install \
+	--with-gsl-dir=${ISSM_DIR}/externalpackages/gsl/install \
+	--with-boost-dir=${ISSM_DIR}/externalpackages/boost/install \
+	--with-dakota-dir=${ISSM_DIR}/externalpackages/dakota/install \
+	--with-proj-dir=${ISSM_DIR}/externalpackages/proj/install \
+	--with-triangle-dir=${ISSM_DIR}/externalpackages/triangle/install \
+	--with-chaco-dir=${ISSM_DIR}/externalpackages/chaco/install \
+	--with-m1qn3-dir=${ISSM_DIR}/externalpackages/m1qn3/install \
+	--with-semic-dir=${ISSM_DIR}/externalpackages/semic/install \
+'
+
+#-------------------#
+# External Packages #
+#-------------------#
+
+EXTERNALPACKAGES="
+	autotools	install-mac.sh
+	cmake		install.sh
+	petsc		install-3.12-mac-static.sh
+	gsl			install-static.sh
+	boost		install-1.7-mac-static.sh
+	dakota		install-6.2-mac-static.sh
+	curl		install-7-mac-static.sh
+	netcdf		install-4.7-parallel-static.sh
+	proj		install-6-static.sh
+	gdal		install-3-python-static.sh
+	gshhg		install.sh
+	gmt			install-6-mac-static.sh
+	gmsh		install-4-mac-static.sh
+	triangle	install-mac-static.sh
+	chaco		install-mac.sh
+	m1qn3		install.sh
+	semic		install.sh
+	shell2junit	install.sh
+"
+
+#---------#
+# Testing #
+#---------#
+
+# Test suites
+MATLAB_TEST=0
+PYTHON_TEST=0
+JAVASCRIPT_TEST=0
+EXAMPLES_TEST=0
+
+# Number of CPUs used in ISSM compilation
+#
+# NOTE: One is usually safer as some packages are very sensitive to parallel
+# 		compilation
+#
+NUMCPUS_INSTALL=8
+
+# Number of CPUs used in the nightly runs
+NUMCPUS_RUN=1
+
+# Nightly run options
+#
+# See documentation in test/NightlyRun/runme.* for more information.
+#
+PYTHON_NROPTIONS=""
+MATLAB_NROPTIONS=""

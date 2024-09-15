@@ -1,0 +1,2 @@
+#!/bin/sh
+mpiexec -np 45 /Users/kasra/MyDocuments-Local/trunk-jpl//bin/issm.exe TransientSolution /Users/kasra/MyDocuments-Local/trunk-jpl//execution/MARS.-09-13-2024-23-14-10-13456 MARS.

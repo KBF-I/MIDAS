@@ -1,0 +1,13 @@
+{
+    "files.exclude": {
+        "*.la": true,
+        "*.lo": true,
+        "**/.deps": true,
+        "**/.dirstamp": true,
+        "**/.libs": true,
+        "**/.vscode": true
+    },
+    "files.associations": {
+        "vector": "cpp"
+    }
+}

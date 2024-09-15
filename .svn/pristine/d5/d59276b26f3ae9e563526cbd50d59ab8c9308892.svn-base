@@ -1,0 +1,66 @@
+
+#-------------------------------#
+# 1: ISSM general configuration #
+#-------------------------------#
+
+#MATLAB path
+MATLAB_PATH="/cygdrive/c/Programs/MATLAB/R2019a"
+
+#ISSM CONFIGURATION
+ISSM_CONFIG='--prefix=$ISSM_DIR \
+	--with-vendor=MSVC-Win64  \
+	--with-cxxoptflags='-fp:strict' \
+	--disable-static \
+	--enable-standalone-libraries \
+	--with-fortran=no  \
+	--without-Sealevelchange \
+	--without-Love \
+	--without-kriging \
+	--without-kml \
+	--with-matlab-dir=$MATLAB_PATH \
+	--with-triangle-dir="$ISSM_DIR/externalpackages/triangle/install" \
+	--with-petsc-dir="$ISSM_DIR/externalpackages/petsc/install" \
+	--with-metis-dir=$ISSM_DIR/externalpackages/metis/install \
+	--with-blas-lapack-dir=$ISSM_DIR/externalpackages/petsc/install/lib/  \
+	--with-mpi-libdir="$ISSM_DIR/externalpackages/petsc/install/lib" \
+	--with-mpi-libflags="-Wl,libpetsc.lib" \
+	--with-mpi-include="$ISSM_DIR/externalpackages/petsc/install/include/petsc/mpiuni" \
+	--enable-development \
+	--enable-debugging '
+
+#PYTHON and MATLAB testing
+MATLAB_TEST=1
+PYTHON_TEST=0
+
+#-----------------------------------#
+# 3: External packages installation #
+#-----------------------------------#
+
+#List of external packages to be installed and their installation scripts
+EXTERNALPACKAGES="
+	autotools   install-win.sh
+	petsc       install-3.6-win10.sh
+	metis       install-4.0-win10.sh
+	triangle    install-windows-static.sh
+	shell2junit install.sh
+"
+
+#-----------------#
+# 4: test options #
+#-----------------#
+
+#number of cpus used in ISSM installation and compilation (one is usually
+#safer as some packages are very sensitive to parallel compilation)
+NUMCPUS_INSTALL=8
+
+#number of cpus used in the nightly runs.
+NUMCPUS_RUN=8
+
+#Nightly run options. The matlab routine runme.m will be called
+#as follows: runme($MATLAB_NROPTIONS). The options must be understandable
+#by Matlab and runme.m
+#ex: "'id',[101 102 103]"
+
+#In Windows, we don't yet have MUMPS, can't do full stokes, so exclude all FS runs. Also exclude all runs with Dakota. And exclude higher order runs that have penalties. And 800+ tests because we don't want to have --with-development since we do the binaries with this version
+MATLAB_NROPTIONS="'exclude',[104,119,124,125,126,204,205,211,215,218,220,221,234,235,243,244,250,251,274,280,285,290,291,308,322,331,340,341,404,405,409,412,413,414,417,418,420,421,422,430,435,440,441,442,444,455,460,463,464,465,503,507,510,511,513,514,612,701,702,703,801,802,803,804,805,IdFromString('Dakota')]"
+PYTHON_NROPTIONS="--exclude_name 'Dakota'"

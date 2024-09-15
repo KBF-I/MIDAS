@@ -1,0 +1,2 @@
+args: CC="/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/bin/mpicc" CFLAGS="-fstack-protector -fno-stack-check -Qunused-arguments -g -O3 -fno-common -Wno-implicit-function-declaration" prefix="/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install"
+cargs: 

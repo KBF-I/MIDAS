@@ -1,0 +1,19 @@
+prefix=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/lib
+ccompiler=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/bin/mpicc
+cflags_extra=-Wall -Wwrite-strings -Wno-unknown-pragmas -fstack-protector -fno-stack-check -Qunused-arguments -fvisibility=hidden -g -O3
+cflags_dep=-MMD -MP
+ldflag_rpath=-Wl,-rpath,
+cxxcompiler=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/bin/mpicxx
+cxxflags_extra=-Wall -Wwrite-strings -Wno-strict-aliasing -Wno-unknown-pragmas -fstack-protector -fno-stack-check -fvisibility=hidden -g -O3  -std=gnu++17
+fcompiler=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/bin/mpif90
+fflags_extra=-Wall -ffree-line-length-0 -Wno-lto-type-mismatch -Wno-unused-dummy-argument -g -O
+
+Name: PETSc
+Description: Library to solve ODEs and algebraic equations
+Version: 3.17.4
+Cflags:   -I${includedir}
+Libs: -L${libdir} -lpetsc
+Libs.private: -L/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/lib -L/opt/homebrew/Cellar/gcc/12.2.0/lib/gcc/current/gcc/aarch64-apple-darwin21/12 -L/opt/homebrew/Cellar/gcc/12.2.0/lib/gcc/current/gcc -L/Users/kasra/Documents/trunk-jpl/externalpackages/petsc/install/lib -L/opt/homebrew/Cellar/gcc/12.2.0/lib/gcc/current -lcmumps -ldmumps -lsmumps -lzmumps -lmumps_common -lpord -lscalapack -lflapack -lfblas -lparmetis -lmetis -lz -lc++ -ldl -lmpifort -lmpi -lpmpi -lgfortran -lemutls_w -lquadmath -lc++ -ldl

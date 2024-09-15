@@ -1,0 +1,9 @@
+prefix=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install
+libdir=/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/lib
+
+Name: scalapack
+Description: SCALAPACK reference implementation
+Version: 2.2.1
+URL: http://www.netlib.org/scalapack/
+Libs: -L/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/petsc/install/lib -lscalapack
+Requires: mpi lapack blas

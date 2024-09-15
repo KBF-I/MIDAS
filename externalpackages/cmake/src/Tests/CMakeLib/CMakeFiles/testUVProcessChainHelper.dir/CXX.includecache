@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/cmake/src/Tests/CMakeLib/testUVProcessChainHelper.cxx
+cctype
+-
+chrono
+-
+cstdlib
+-
+iostream
+-
+set
+-
+sstream
+-
+string
+-
+thread
+-
+

@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/cmake/src/Tests/RunCMake/pseudo_tidy.c
+stdio.h
+-
+string.h
+-
+

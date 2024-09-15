@@ -1,0 +1,12 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/kasra/MyDocuments-Local/trunk-jpl/externalpackages/cmake/src/Tests/RunCMake/pseudo_emulator.c
+stdio.h
+-
+

@@ -1,0 +1,11 @@
+--- Utilities/cmcurl/CMakeLists.txt_orig	2017-08-29 08:37:31.000000000 +0200
++++ Utilities/cmcurl/CMakeLists.txt	2017-08-29 08:37:55.000000000 +0200
+@@ -50,7 +50,7 @@
+       )
+   endif()
+   if(NOT OSX_VERSION VERSION_LESS 10.6 AND
+-      CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
++      CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
+     set(CMAKE_USE_DARWINSSL ON CACHE INTERNAL "enable Apple OS native SSL/TLS")
+   else()
+     set(CMAKE_USE_DARWINSSL OFF CACHE INTERNAL "enable Apple OS native SSL/TLS")
