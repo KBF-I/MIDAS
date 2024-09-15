@@ -1,0 +1,4 @@
+src/c/.libs/libISSMCore.a
+lib/libISSMCore.a
+examples/Data/Box_Greenland_SMB_monthly_1840-2012_5km_cal_ver20141007.nc
+examples/Data/Antarctica_ice_velocity.nc
