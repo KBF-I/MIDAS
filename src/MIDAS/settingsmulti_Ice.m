@@ -32,7 +32,6 @@ classdef settingsmulti_Ice < issmsettings
             fielddisplay(self,'InitialResolution','Initial Resolution');
             fielddisplay(self,'thickness_firstIceUnit_threshold','In meters, when starting a model, MIDAS will enforce a minimum thickness equal to this amount, to the first ice unit. (i.e., the first ice unit will start with minimum of this thickness on every node, and will not be reduced to less than this amount during transient runs.) ');
             fielddisplay(self,'frictionCoeff','Friction Coefficient');
-            fielddisplay(self,'minimumNbrLayersInMesh','Minimum number of layers that a unit mesh can have. Default and the minimum possible number is 2');
         end
     end
 end

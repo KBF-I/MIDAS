@@ -7,6 +7,7 @@ classdef meshmulti_Ice
         numberOfElementsIn2D = 0;
         numberOfVerticesIn2D = 0;
         extrusionlist=[];
+        currentPeriodIceType = 1;
         periodSMB=0;      %this is a placeholder to carry the smbs for plotting purposes. if it is not set correctly the MassVolume_Changes_Accumulative will not show the correct SMB value
         domainArea = -1;  %[m^2]
 
@@ -118,16 +119,14 @@ classdef meshmulti_Ice
             last=max(unitVertices);
         end
           
-        function md=addNewUnit(~, md, tempUnit)
+        function md=addNewUnit(~, md, tempUnit, tempPeriodSMBs)
             unitPos=md.multiIceMesh.currentIceUnitsCnt;
-            threshold=md.settings.thickness_minThreshld;
-            %TODO next line should be mean(..currentperiodthickness); but I
-            %am assuming it is all the same for performance
-            md.multiIceMesh.periodSMB=(md.multiIceMesh.currentPeriodThickness(1))/md.settings.output_frequency;%mean(md.mu  /(timespan/md.settings.output_frequency);  %% KK
-            newUnit=false;
-            if unitPos<=1
-                threshold=md.settings.thickness_firstIceUnit_threshold;
-            else
+            md.multiIceMesh.periodSMB=mean(tempPeriodSMBs);
+            md.multiIceMesh.currentPeriodIceType=tempUnit.IceType;
+            newUnit= (unitPos==0) || (unitPos>0 && (tempUnit.IceType~=md.multiIceMesh.iceUnits(unitPos).IceType && mean(tempUnit.Thickness)>0)) ;
+
+
+            if unitPos>1
                 if md.multiIceMesh.iceUnits(unitPos).IceType~=tempUnit.IceType && any(tempUnit.Thickness<0)
                     if md.multiIceMesh.iceUnits(unitPos-1).IceType~=tempUnit.IceType || unitPos<2
                         error('no appropriate unit to apply sublimation to... Sublimation is to be applied to the unit immediately below the surface unit');
@@ -135,16 +134,17 @@ classdef meshmulti_Ice
                     unitPos=unitPos-1;
                 end
             end
-            if unitPos==0 || (md.multiIceMesh.iceUnits(unitPos).IceType~=tempUnit.IceType && ~any(tempUnit.Thickness<0))
-                newUnit=true;
-            end
+
+            if newUnit, unitPos=unitPos+1; end
 
             if ~newUnit %//2
                 md.multiIceMesh.iceUnits(unitPos).Thickness=md.multiIceMesh.iceUnits(unitPos).Thickness+tempUnit.Thickness;
                 md.multiIceMesh.iceUnits(unitPos).Surface=md.multiIceMesh.iceUnits(unitPos).Thickness+md.multiIceMesh.iceUnits(unitPos).Bed;
                 md.multiIceMesh.impactedUnit = unitPos;
+
+                % md.smb.mass_balance=md.multiIceMesh.periodSMB*ones(md.mesh.numberofvertices, 1);
             else
-                tempUnit.Thickness(tempUnit.Thickness==0)=threshold;
+                tempUnit.Thickness(tempUnit.Thickness==0)=0;
                 if tempUnit.Thickness(1)>0
                     md.multiIceMesh.iceUnits = [md.multiIceMesh.iceUnits; tempUnit];
                     md.multiIceMesh.impactedUnit = md.multiIceMesh.currentIceUnitsCnt;
@@ -153,44 +153,122 @@ classdef meshmulti_Ice
                     return
                 end
             end
+            
+if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed=md.multiIceMesh.iceUnits(unitPos).Surface; md.multiIceMesh.iceUnits(end).Surface=md.multiIceMesh.iceUnits(end).Bed+md.multiIceMesh.iceUnits(end).Thickness;     end
+
+            %if we are using SMBs clean up and leave
+            if md.materials.useSMB
+                if newUnit, md=md.multiIceMesh.setUnits_Elements(md, true);end
+                %we are using smbs, so do not modify the geometry.
+                return
+            end
 
             md=md.collapse();
-            %if any thickness is less than threshold, set it to the threshold and reconstruct the unit
-            for a=1: md.multiIceMesh.currentIceUnitsCnt
-                md.multiIceMesh.iceUnits(a).Thickness(md.multiIceMesh.iceUnits(a).Thickness<threshold)=threshold;
-                md.multiIceMesh.iceUnits(a).Surface=md.multiIceMesh.iceUnits(a).Thickness+md.multiIceMesh.iceUnits(a).Bed;
-                if a<md.multiIceMesh.currentIceUnitsCnt
-                    md.multiIceMesh.iceUnits(a+1).Bed=md.multiIceMesh.iceUnits(a).Surface;
+
+            % if any thickness is less than threshold, set it to the threshold and reconstruct the unit
+            % for a=1: md.multiIceMesh.currentIceUnitsCnt
+                % if a<=1
+                %     threshold=1; %md.settings.thickness_firstIceUnit_threshold;
+                % else
+                %     threshold=md.settings.thickness_minThreshld;
+                % end
+                % threshold=0;
+                                % md.multiIceMesh.iceUnits(a).Thickness(md.multiIceMesh.iceUnits(a).Thickness<threshold)=threshold;
+                % md.multiIceMesh.iceUnits(a).Surface=md.multiIceMesh.iceUnits(a).Thickness+md.multiIceMesh.iceUnits(a).Bed;
+
+                %make sure the bed CO2 unit does not go below 1 meter or
+                %the solver will crash. 
+                A=find(md.multiIceMesh.iceUnits(1).Thickness<=1);
+                if size(A)>0
+                    md.multiIceMesh.iceUnits(1).Thickness(A)=1;
+                    md.multiIceMesh.iceUnits(1).Surface=md.multiIceMesh.iceUnits(1).Thickness+md.multiIceMesh.iceUnits(1).Bed;
+                    if md.multiIceMesh.currentIceUnitsCnt>1
+                        md.multiIceMesh.iceUnits(2).Bed=md.multiIceMesh.iceUnits(1).Surface;
+                    end
                 end
-            end
+
+                %investigate from the A numbers above - since we are
+                %forcing the base to be fixed at 1 m; we need to make sure
+                %the that the water ice on teh surface does not go awry.
+                %any one of these points should have a thickness aligned
+                %with its adjacent points. 
+
+                if md.multiIceMesh.currentIceUnitsCnt>=2
+                    % Initialize a new thickness array for points in A
+                    updated_thickness = md.multiIceMesh.iceUnits(2).Thickness;
+
+                    % Loop over each point in A
+                    for i = 1:length(A)
+                        point = A(i);
+
+                        % Find all elements containing the current point
+                        elements_with_point = find(any(md.mesh.elements == point, 2));
+
+                        % Extract the node indices of all elements (excluding the current point and other A points)
+                        nodes_in_elements = md.mesh.elements(elements_with_point, :);
+                        nodes_in_elements(nodes_in_elements == point) = [];
+                        nodes_in_elements = unique(nodes_in_elements);
+                        nodes_in_elements = setdiff(nodes_in_elements, A); % Exclude other A points
+
+                        % Check if there are any valid adjacent points
+                        if ~isempty(nodes_in_elements)
+                            % Extract coordinates of adjacent points
+                            adjacent_x = md.mesh.x(nodes_in_elements);
+                            adjacent_y = md.mesh.y(nodes_in_elements);
+                          %  adjacent_z = md.mesh.z(nodes_in_elements);
+                            adjacent_thickness = md.multiIceMesh.iceUnits(2).Thickness(nodes_in_elements);
+
+                            % Coordinates of the current point
+                            point_x = md.mesh.x(point);
+                            point_y = md.mesh.y(point);
+                          %  point_z = md.mesh.z(point);
+
+                            % Compute distances from the current point to each adjacent point
+                            distances = sqrt((adjacent_x - point_x).^2 + ...
+                                (adjacent_y - point_y).^2 );
+                           %     (adjacent_z - point_z).^2);
+
+                            % Apply inverse-distance weighting to compute a smoothed thickness
+                            weights = 1 ./ (distances + eps); % Avoid division by zero
+                            smoothed_thickness = sum(weights .* adjacent_thickness) / sum(weights);
+
+                            % Update thickness if the current value is an outlier
+                            if md.multiIceMesh.iceUnits(2).Thickness(point) > smoothed_thickness
+                                updated_thickness(point) = smoothed_thickness;
+                            end
+                        end
+                    end
+
+                    % Update only the thickness of points in A
+                    md.multiIceMesh.iceUnits(2).Thickness(A) = updated_thickness(A);
+                    md.multiIceMesh.iceUnits(2).Surface = md.multiIceMesh.iceUnits(2).Thickness+md.multiIceMesh.iceUnits(2).Bed;
+                end
+
+
+            % end
+
+
 
             %MERGE!
             if md.multiIceMesh.currentIceUnitsCnt >=3 %If 3 units or more
                 for k=md.multiIceMesh.currentIceUnitsCnt:-1:3
-                    if  ((k-2>0) &&  (md.multiIceMesh.iceUnits(k).IceType==md.multiIceMesh.iceUnits(k-2).IceType ))
-                        M=find(md.multiIceMesh.iceUnits(k-1).Thickness<=threshold); %   the find all nodes where the unit blow has 0 thickness
-                        if ~isempty(M)
-                            % For those points, remove the thickness in the
-                            % top unit. Add it to the below unit.
-                            md.multiIceMesh.iceUnits(k-2).Thickness(M)= md.multiIceMesh.iceUnits(k-2).Thickness(M)+ md.multiIceMesh.iceUnits(k).Thickness(M);
-                            % the top unit and the middle unit will now
-                            % have the minimum threshold thickness. 
-                            md.multiIceMesh.iceUnits(k-1).Thickness(M)=threshold*1.0001;%    
-                            md.multiIceMesh.iceUnits(k).Thickness(M)=threshold*1.0001;%         
+                    if md.multiIceMesh.iceUnits(k).IceType==mat_consts.H2O && ... % If the top material is H2O, and immidiately  below is CO2
+                            md.multiIceMesh.iceUnits(k-1).IceType==mat_consts.CO2
+                        M=find(md.multiIceMesh.iceUnits(k-1).Thickness<=0.05); %   the find all nodes where the unit blow has 0 thickness
+                        if size(M, 1)>=0.25*md.mesh.numberofvertices  % 25% of vertices have a close to 0 thickness now
+
+                            %move the thickness of the two top layers
+                            md.multiIceMesh.iceUnits(k-2).Thickness= md.multiIceMesh.iceUnits(k-2).Thickness+ md.multiIceMesh.iceUnits(k).Thickness;
+                           % md.multiIceMesh.iceUnits(k-3).Thickness= md.multiIceMesh.iceUnits(k-3).Thickness+ md.multiIceMesh.iceUnits(k-1).Thickness;
+
+                            %now remove the top two units
+                            md.multiIceMesh.iceUnits(end)=[];md.multiIceMesh.iceUnits(end)=[];
+                            break;
                         end
                     end
                 end
             end
 
-            %TODO check extrusion func for any nodes being zero.
-
-            %if we are using SMBs clean up and leave
-            if md.materials.useSMB
-                if newUnit, md=md.multiIceMesh.setUnits_Elements(md, true);end
-                md=md.extrudeModel(2);
-                %we are using smbs, so do not modify the geometry.
-                return
-            end
 
             %now setup the geometry: here we are going through the units
             %and their dimentions to double check and fix any issues
@@ -198,7 +276,7 @@ classdef meshmulti_Ice
             b=md.multiIceMesh.iceUnits(1).Bed;
 
             temp_thickness=s-b;
-            temp_thickness(temp_thickness<threshold)=threshold; %%0.5;%%
+            temp_thickness(temp_thickness<0)=0;%threshold; %%0.5;%%
             md.geometry.surface =b+temp_thickness;
             md.geometry.bed=b;
             md.geometry.base=b;
@@ -292,7 +370,23 @@ classdef meshmulti_Ice
 
      end       
      methods(Access=private)
-        function self=setNumberOfLayers(self)
+  
+         function self=setNumberOfLayers3(self)
+             for idx=1:self.currentIceUnitsCnt
+                 if self.iceUnits(idx).IceType==2  %H2O
+                     self.iceUnits(idx).NmbLayers=2;
+                 else
+                     self.iceUnits(idx).NmbLayers=5;
+                 end
+             end
+
+         end
+
+
+
+         
+         
+         function self=setNumberOfLayers(self)
 
             %find the current total average height of the ice cap
             myThickness=zeros(length(self.iceUnits(1).Thickness),1);
@@ -333,26 +427,22 @@ classdef meshmulti_Ice
             %the number of layers...each unit can have layers between 
             % settingsmulti_Ice.minNbrLayersInIceUnit (default is 2) and
             % the min_numlayers
-            nmLayers=self.min_numLayers;
-            %TODO why is this here: 
-            if self.currentIceUnitsCnt==2, nmLayers=nmLayers+1; end
             for idx=1:self.currentIceUnitsCnt
-                n=ceil(mean(self.iceUnits(idx).currentHeightPercentage)*nmLayers);
-                if n<2 %md.settings.minNbrLayersInIceUnit, 
-                     n=2 %md.settings.minNbrLayersInIceUnit;
-                end %make sure there is a top for the element
-                if n>self.min_numLayers, n=self.min_numLayers; end
+                meanThickness=mean(self.iceUnits(idx).Thickness);
+                %for every 25 meter of thickness we are adding one new mesh
+                %layer
+                n = round(meanThickness / 25) +1;
+
+                if n > self.min_numLayers
+                    n = self.min_numLayers;
+                end
+                if n<2  
+                    n=2;  
+                end  
+ 
                 self.iceUnits(idx).NmbLayers=n;
             end
-            
-            %how many layers do we have?
-            totalLayers=0;
-            for idx=1:self.currentIceUnitsCnt
-                totalLayers=totalLayers+self.iceUnits(idx).NmbLayers;
-            end
-            %  remaining layers; add to the base unit
-            if nmLayers>totalLayers, self.iceUnits(1).NmbLayers=self.iceUnits(1).NmbLayers+(nmLayers-totalLayers);end
- 
+
         end
      end
 

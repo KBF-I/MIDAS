@@ -68,8 +68,7 @@ classdef modellingParams
         thicknessThreshold  = 1.0;     %[m]
         thickness_minThreshld=0;
 
-        noSMBYrs2CallSolver = 2;    %use this if we are not using SMBs at all
-        SMBYrs2CallSolver = 50;   %use this if useSMB_to_CallSolver=true
+        EveryNmbYrCallSolver = 50;   %use this if useSMB_to_CallSolver=true
         %how many times the solver should be called in a time period. e.g. a 
         % time period is 1000 years; if this is 1000, then the solver will  
         % be called 1000 times in 1 year periodself. (different from when 

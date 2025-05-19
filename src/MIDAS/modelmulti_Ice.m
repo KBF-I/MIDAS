@@ -51,7 +51,6 @@ classdef modelmulti_Ice < model
             md.materials.boundaryConditions_vel          = md.initialization.vel     ;
             md.materials.boundaryConditions_pressure     = md.initialization.pressure     ;
             
-
             md = collapse@model(md);
         end
 
@@ -73,6 +72,14 @@ classdef modelmulti_Ice < model
             end
 
             %it is transient; let's continue
+                results = md.results.TransientSolution(end);
+                md.initialization.vx = results.Vx;
+                md.initialization.vy = results.Vy;
+                md.initialization.vz = results.Vz;
+                md.initialization.vel= results.Vel;
+                md.initialization.pressure = results.Pressure;
+                md.initialization.temperature=results.Temperature;
+
             for ii=1:length(md.results.TransientSolution)
                 md.results.TransientSolution(ii).iceType=iceType;
                 md.results.TransientSolution(ii).unitID=md.multiIceMesh.currentIceUnitsCnt;%the uppermost unit is the one we are working on...
@@ -100,8 +107,17 @@ classdef modelmulti_Ice < model
                 %if we are not using SMBs then the backend will return 0
                 %for SMB values, so here we need to set them up manually
                 if ~md.materials.useSMB
-                    tempSolutions(idx).TotalSmb=totalSMB;
-                    tempSolutions(idx).SmbMassBalance=SMBs;
+                    if md.multiIceMesh.currentPeriodIceType==1
+                        tempSolutions(idx).TotalSmb=totalSMB;
+                        tempSolutions(idx).SmbMassBalance=SMBs;
+                                                tempSolutions(idx).H2OTotalSmb=0;
+                        tempSolutions(idx).H2OSmbMassBalance=zeros(md.mesh.numberofvertices, 1);
+                    else
+                        tempSolutions(idx).H2OTotalSmb=totalSMB;
+                        tempSolutions(idx).H2OSmbMassBalance=SMBs;
+                                                tempSolutions(idx).TotalSmb=0;
+                        tempSolutions(idx).SmbMassBalance=zeros(md.mesh.numberofvertices, 1);;
+                    end
                 end
             end
             iii=1;
@@ -114,29 +130,29 @@ classdef modelmulti_Ice < model
                 tempSolutions(iii).step=ii;
                 iii=iii+1;
             end
-            md.uniqueTransientSolutions=[md.uniqueTransientSolutions, tempSolutions];
+            try
+                md.uniqueTransientSolutions=[md.uniqueTransientSolutions, tempSolutions];
+            catch
+                % Assuming md.uniqueTransientSolutions is an array of structures
 
+                % Define the values you want to assign to the new fields
+                % Replace the "zeros(1, length(md.uniqueTransientSolutions))" with actual values or calculated data
+                H2OTotalSmbValues = zeros(1, length(md.uniqueTransientSolutions)); % Example: Initialize with zeros
+                H2OSmbMassBalanceValues = zeros(1, length(md.uniqueTransientSolutions)); % Example: Initialize with zeros
 
-            %{
-            Aug 18, 2024 - I am stopping to use the modelRestart, instead
-            %introducing the use of reconstructElements
-
-
-            x=10000;                       %times that of the median of thickness; for Pluto use 10, for MCID use 4
-            onlyOnBoundary=true;        %do the cap only on the boundary vertices
-
-            switch nargin
-                case 6
-                    x=varargin{1};
-                case 7
-                    x=varargin{1};
-                    onlyOnBoundary=varargin{2};
+                % Add the new fields to each structure in the array
+                for i = 1:length(md.uniqueTransientSolutions)
+                    md.uniqueTransientSolutions(i).H2OTotalSmb = H2OTotalSmbValues(i);
+                    md.uniqueTransientSolutions(i).H2OSmbMassBalance = H2OSmbMassBalanceValues(i);
+                end
+                md.uniqueTransientSolutions=[md.uniqueTransientSolutions, tempSolutions];
             end
 
-            md=md.modelRestart(logFileLocation, x, onlyOnBoundary);
+            s=md.timestepping.start_time;
+            md = transientrestart(md);
+            md.results=[]; % we no longer need the results
+            md.timestepping.start_time=s;
 
-            ////Here is the new line below
-            %}
             md=md.multiIceMesh.reconstruct_IceUnitsMesh(md);
 
         end
@@ -158,6 +174,8 @@ classdef modelmulti_Ice < model
             %always after extrude reset the materials, as the materials
             %are assigned to each element, and we need to reset them based
             %on the new element structure
+                        md.multiIceMesh.isModel3D = true;
+            md=md.multiIceMesh.reconstruct_IceUnitsMesh(md);
             md.materials = md.materials.setIceProperties (md);
 
             if ~isempty (md.materials.boundaryConditions_temperature)
@@ -196,7 +214,7 @@ classdef modelmulti_Ice < model
                 end
                 md.materials.boundaryConditions_vel="";
             end
-            md.multiIceMesh.isModel3D = true;
+
         end      
         
         function md=extrude(md, varargin)
@@ -499,7 +517,7 @@ classdef modelmulti_Ice < model
                 N=[];
                 if activeUnit>1,  N=find(md.multiIceMesh.iceUnits(activeUnit-1).Thickness<0); end
                 %Note: we are fixing the minimum thickness of a unit to a certain
-                %threshold here. If the timestep is less than 200
+                %threshold here. for eample. If the timestep is less than 200
                 %years, for the first ~200 years the thickness will be
                 %fixed at this threshold (because most probably the accumulation is
                 % about 3-5 mm and when the time step is about 100-200 years,
@@ -533,8 +551,10 @@ classdef modelmulti_Ice < model
                 %high, cap the thickness, and let the ice flow out of the model
                 %maximum acceptable thickness is x times that of the median
                 %of the thickess of the nodes on the boundary
+                %if you want to activate this logic chagne x to a
+                %reasonable amount. at currently 100 km it will never run. 
 
-                x=10000;                       %times that of the median of thickness; for Pluto use 10, for MCID use 4
+                x=100000;                       %times that of the median of thickness; for Pluto use 10, for MCID use 4
                 onlyOnBoundary=true;        %do the cap only on the boundary vertices
 
                 switch nargin
@@ -615,10 +635,211 @@ classdef modelmulti_Ice < model
 
             end
 
-            md=md.multiIceMesh.setUnits_Elements(md, false);
+         %   md=md.multiIceMesh.setUnits_Elements(md, false);
 
         end
     
+
+%{
+        function md=modelRestart(md,logFileLocation, varargin)
+            if ~md.multiIceMesh.isModel3D, error('Model needs to be in 3D'), end
+            count=md.mesh.numberofvertices2d;  
+            s=md.timestepping.start_time;
+            md = transientrestart(md);
+            md.results=[]; % we no longer need the results
+            md.timestepping.start_time=s;
+            thicknessAfterTransient=md.geometry.thickness(1:count);
+            bed= md.geometry.bed(1:count); %first unit is the lowest unit
+
+            if ~md.multiIceMesh.onlyAdjustImpactedUnit
+                %let's adjust all the units first
+                for idx=1:md.multiIceMesh.currentIceUnitsCnt       %1 to unitsCnt: from lowest to the upper levels
+                    md.multiIceMesh.iceUnits(idx).Bed       = bed;
+                    md.multiIceMesh.iceUnits(idx).Thickness = thicknessAfterTransient * md.multiIceMesh.iceUnits(idx).currentHeightPercentage;
+                    md.multiIceMesh.iceUnits(idx).Surface   = md.multiIceMesh.iceUnits(idx).Thickness + md.multiIceMesh.iceUnits(idx).Bed;
+
+                    bed = md.multiIceMesh.iceUnits(idx).Surface;
+                end
+            elseif md.multiIceMesh.currentIceUnitsCnt>1
+                % what is the change between and after the transient run?
+                %Delta= new - old
+                deltaThickness=md.geometry.surface(1:count)-md.multiIceMesh.iceUnits(end).Surface;
+                positive_delta=deltaThickness;
+                positive_delta(positive_delta<0)=0;
+                negative_delta=deltaThickness;
+                negative_delta(negative_delta>0)=0;
+                
+                %if the top unit is CO2 it gets the changes. If the top
+                %unit is H2O, it'll get the positive chagnes and the
+                %negative chagnes will go to the unit underneath it. 
+
+                %CO2_H2O_Specific: The assumption is that H2O is much
+                %stronger than CO2, therefore if the impacted layer is of type
+                %of H2O, after the model is run, the impact on the thickness
+                %will be applied to the CO2 unit below the H2O unit. However,
+                %if the impacted unit is of type of CO2, then the change to the
+                %overal thickness of the model will be applied to the same
+                %unit.
+                %If this is a unit that is just forming now, and it is of
+                %type of CO2, then the changes in the thickness will be
+                %applied to the previous CO2 unit (two units below) if
+                %such exists
+
+                %what is the type of the impacted unit?
+                ice_Type=md.multiIceMesh.iceUnits(md.multiIceMesh.impactedUnit).IceType;
+                activeUnit=md.multiIceMesh.impactedUnit;
+                if activeUnit<md.multiIceMesh.currentIceUnitsCnt && ice_Type==mat_consts.CO2
+                    %sublimation 
+                        md.multiIceMesh.iceUnits(activeUnit).Thickness= ...
+                            md.multiIceMesh.iceUnits(activeUnit).Thickness+deltaThickness;
+                else
+                    %deposition
+                    if ice_Type==mat_consts.H2O
+                        md.multiIceMesh.iceUnits(activeUnit).Thickness= ...
+                            md.multiIceMesh.iceUnits(activeUnit).Thickness+positive_delta;
+                        %per note above
+                        if activeUnit>1
+                            md.multiIceMesh.iceUnits(activeUnit-1).Thickness= ...
+                                md.multiIceMesh.iceUnits(activeUnit-1).Thickness+negative_delta;
+                        else
+                            md.multiIceMesh.iceUnits(activeUnit).Thickness= ...
+                                md.multiIceMesh.iceUnits(activeUnit).Thickness+negative_delta;
+                        end
+                    else
+                        md.multiIceMesh.iceUnits(activeUnit).Thickness= ...
+                            md.multiIceMesh.iceUnits(activeUnit).Thickness+deltaThickness;
+                    end
+                end
+               
+                %let's makes sure no node gets a negative thickness
+                M=find(md.multiIceMesh.iceUnits(activeUnit).Thickness<0);
+                N=[];
+                if activeUnit>1,  N=find(md.multiIceMesh.iceUnits(activeUnit-1).Thickness<0); end
+                %Note: we are fixing the minimum thickness of a unit to a certain
+                %threshold here. for eample. If the timestep is less than 200
+                %years, for the first ~200 years the thickness will be
+                %fixed at this threshold (because most probably the accumulation is
+                % about 3-5 mm and when the time step is about 100-200 years,
+                % the accumulation will be less than 50 cm, so this part of the
+                % code will continuously set the thickness to 50 cm),
+                % until it starts to grow and go
+                %beyond the threshold. This is necessary to do or the
+                %backend will result in negative jackobian. This should be
+                %fine for simulations that will run for hundreds of
+                %thousands of years
+                threshold=md.settings.thickness_minThreshld; %minium thickness is 
+                if activeUnit==1
+                    threshold=md.settings.thickness_firstIceUnit_threshold;
+                end
+
+                if ~isempty(M)
+                    if activeUnit==md.multiIceMesh.currentIceUnitsCnt
+                        md.multiIceMesh.iceUnits(activeUnit).Thickness(M)=0;  %only negative thickness...
+                    else
+                        md.multiIceMesh.iceUnits(md.multiIceMesh.currentIceUnitsCnt).Thickness(M)= md.multiIceMesh.iceUnits(md.multiIceMesh.currentIceUnitsCnt).Thickness(M)+ md.multiIceMesh.iceUnits(activeUnit).Thickness(M);
+                        md.multiIceMesh.iceUnits(activeUnit).Thickness(M)=threshold;
+                    end
+                end
+                if ~isempty(N)
+                    md.multiIceMesh.iceUnits(md.multiIceMesh.currentIceUnitsCnt).Thickness(N)= md.multiIceMesh.iceUnits(md.multiIceMesh.currentIceUnitsCnt).Thickness(N)+ md.multiIceMesh.iceUnits(activeUnit-1).Thickness(N);
+                    md.multiIceMesh.iceUnits(activeUnit-1).Thickness(N)=threshold;
+                end
+         
+
+                %if the thickness of a node on the boundary of a none_H2O unit becomes too
+                %high, cap the thickness, and let the ice flow out of the model
+                %maximum acceptable thickness is x times that of the median
+                %of the thickess of the nodes on the boundary
+                %if you want to activate this logic chagne x to a
+                %reasonable amount. at currently 100 km it will never run. 
+
+                x=100000;                       %times that of the median of thickness; for Pluto use 10, for MCID use 4
+                onlyOnBoundary=true;        %do the cap only on the boundary vertices
+
+                switch nargin
+                    case 3
+                        x=varargin{1};
+                    case 4
+                        x=varargin{1};
+                        onlyOnBoundary=varargin{2};
+                end
+
+                if onlyOnBoundary
+                    b=round(median(md.geometry.thickness(md.mesh.vertexonboundary==1)),2)*x;  %max allowable thickness
+                else 
+                    b=round(median(md.geometry.thickness),2)*x; %#ok<UNRCH> 
+                end
+
+                if max(md.geometry.thickness)>b 
+
+                    %boudary nodes with higher thickness
+                    if onlyOnBoundary
+                        M=(md.geometry.thickness>b)+md.mesh.vertexonboundary;
+                        M=find(M==2);
+                    else
+                        % vs. all nodes with higher thickness
+                        M=(md.geometry.thickness>b); %#ok<UNRCH> 
+                        M=find(M==1);
+                    end
+
+                    %move M to 2D
+                    M=M(M<=md.multiIceMesh.numberOfVerticesIn2D);
+                    if ~isempty(M)
+                        simsTextFile = fopen([logFileLocation '/ThicknessCapLog.txt'],'a+');
+                        %how many None_H2O units?
+                        none_h2o_count=0;
+                        for id=1:md.multiIceMesh.currentIceUnitsCnt
+                            if md.multiIceMesh.iceUnits(id).IceType~=mat_consts.H2O, none_h2o_count=none_h2o_count+1;end
+                        end
+                        %adjust their thickness
+                        t=0;
+                        adjustedThickness=b/none_h2o_count;
+                        for id=1:md.multiIceMesh.currentIceUnitsCnt
+                            if md.multiIceMesh.iceUnits(id).IceType~=mat_consts.H2O
+                                A=M(md.multiIceMesh.iceUnits(id).Thickness(M)>adjustedThickness);
+
+                                %Log the changes...
+                                fprintf(simsTextFile,'=================Time Period Ending in  : %i============================= \n', md.timestepping.final_time);
+                                fprintf(simsTextFile,' Unit ID: %i \n', id);
+                                fprintf(simsTextFile,' Unit IceType: %i \n', md.multiIceMesh.iceUnits(id).IceType);
+                                fprintf(simsTextFile,' Node        Thickness                    To \n');
+                                fprintf(simsTextFile,'  %i,       %i,              %i  \n', ...
+                                    [A, md.multiIceMesh.iceUnits(id).Thickness(A), (adjustedThickness)*ones(size(A,1),1)].');
+
+                                md.multiIceMesh.iceUnits(id).Thickness(A)=adjustedThickness;
+                            end
+
+                            t=t+md.multiIceMesh.iceUnits(id).Thickness;
+                        end
+                        %now adjust the geometry
+                        if md.multiIceMesh.isModel3D, md=md.collapse(); end
+                        md.geometry.thickness=t;
+                        md.geometry.surface=md.geometry.bed+md.geometry.thickness;
+
+                        fclose(simsTextFile);
+                    end
+                end  %capping the thickness- done.
+
+                for a=1: md.multiIceMesh.currentIceUnitsCnt
+                    md.multiIceMesh.iceUnits(a).Thickness(md.multiIceMesh.iceUnits(a).Thickness<0)=threshold;
+                    md.multiIceMesh.iceUnits(a).Surface=md.multiIceMesh.iceUnits(a).Thickness+md.multiIceMesh.iceUnits(a).Bed;
+                    if a<md.multiIceMesh.currentIceUnitsCnt
+                        md.multiIceMesh.iceUnits(a+1).Bed=md.multiIceMesh.iceUnits(a).Surface;
+                    end
+                end
+
+                md.multiIceMesh.iceUnits(1).Bed=bed;
+                md.multiIceMesh.iceUnits(end).Surface=md.geometry.surface(1:count);
+                md.multiIceMesh.iceUnits(end).Thickness=md.multiIceMesh.iceUnits(end).Surface-md.multiIceMesh.iceUnits(end).Bed;
+
+            end
+
+         %   md=md.multiIceMesh.setUnits_Elements(md, false);
+
+        end
+    
+
+%}
 
     end
 

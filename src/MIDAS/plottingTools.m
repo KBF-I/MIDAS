@@ -82,32 +82,29 @@ classdef plottingTools
             if minVelBoundary==maxVelBoundary, minVelBoundary=0; end
             if Boundaries(3,1)~=-1 && Boundaries(3,2)~=-1
                 minTemperatureBoundary=Boundaries(3,1);   maxTemperatureBoundary=Boundaries(3,2);
-            else 
+            else
                 minTemperatureBoundary=self.minTemperature; maxTemperatureBoundary=self.maxTemperature;
             end
-             if minTemperatureBoundary==maxTemperatureBoundary, minTemperatureBoundary=0; end
+            if minTemperatureBoundary==maxTemperatureBoundary, minTemperatureBoundary=0; end
             if Boundaries(4,1)~=-1 && Boundaries(4,2)~=-1
                 minQuiverBoundary=Boundaries(4,1);   maxQuiverBoundary=Boundaries(4,2);
-            else 
+            else
                 minQuiverBoundary=self.minV; maxQuiverBoundary=self.maxV;
             end
-             if minQuiverBoundary==minQuiverBoundary, minQuiverBoundary=0; end
+            if minQuiverBoundary==minQuiverBoundary, minQuiverBoundary=0; end
 
-           %    DrawPlot(self, md, '2D Velocity', false, '[m/yr]', [self.minV, self.maxV]);
- 
-% md.mesh.z=md.mesh.z-8000;   %KBF
-%  md.geometry.surface=md.geometry.surface-8000;  %KBF
+
 
 
             DrawPlot(self, md, 'Thickness',  false, '[m]'   , [minThicknessBoundary, maxThicknessBoundary], xlim, ylim);
-       %     DrawPlot(self, md, 'Vel',        false, '[m/yr]', [minVelBoundary, maxVelBoundary], xlim, ylim);
-       %    DrawPlot(self, md, 'quiver',     false, '[m/yr]', [minQuiverBoundary, maxQuiverBoundary], xlim, ylim, quiverScaling,quiverDensity);
-        %    DrawPlot(self, md, 'Vel',        false, '[m/yr]', [minQuiverBoundary, maxQuiverBoundary], xlim, ylim);
-       %    DrawPlot(self, md, 'Streamline',        false, ' ', [minVelBoundary, maxVelBoundary], xlim, ylim);
-        %    DrawPlot(self, md, 'Temperature',true,  '[K]'   , [minTemperatureBoundary, maxTemperatureBoundary], xlim, ylim);
-          %  DrawPlot(self, md, 'Surface', false,' ',[3.413525461106856e+03 8.478555569525319e+03], xlim, ylim );
- 
-       %     maxplot (self, md, Array4Plotting);
+            DrawPlot(self, md, 'Vel',        false, '[m/yr]', [minVelBoundary, maxVelBoundary], xlim, ylim);
+            DrawPlot(self, md, 'quiver',     false, '[m/yr]', [minQuiverBoundary, maxQuiverBoundary], xlim, ylim, quiverScaling,quiverDensity);
+            DrawPlot(self, md, 'Vel',        false, '[m/yr]', [minQuiverBoundary, maxQuiverBoundary], xlim, ylim);
+            DrawPlot(self, md, 'Streamline',        false, ' ', [minVelBoundary, maxVelBoundary], xlim, ylim);
+            DrawPlot(self, md, 'Temperature',true,  '[K]'   , [minTemperatureBoundary, maxTemperatureBoundary], xlim, ylim);
+            DrawPlot(self, md, 'Surface', false,' ',[3800 5800], xlim, ylim );
+
+            maxplot (self, md, Array4Plotting);
         end
 
         function DrawPlot(self, md, plotType, isBasal, unit, caxis, xlim, ylim, quiverScaling, quiverDensity)
@@ -123,7 +120,7 @@ classdef plottingTools
             
             if startsWith(plotType, "streamline",'IgnoreCase', true)
                 md2=collapse(md);  
-                plotmodel(md2,'data',md2.uniqueTransientSolutions(end).Vel(1: md2.mesh.numberofvertices),'streamlines',200,'title',plotTitle,'xlim', xlim, 'ylim', ylim,'caxis',caxis);
+                plotmodel(md2,'data',md2.uniqueTransientSolutions(end).Vel(1: md2.mesh.numberofvertices),'streamlines',200,'title',plotTitle)%,'caxis',caxis,'xlim', xlim, 'ylim', ylim)
             else
                 if ~exist('caxis','var')
                     if startsWith(plotType, "quiver",'IgnoreCase', true)
@@ -176,10 +173,7 @@ classdef plottingTools
                 bottom='bottom';
             end
       
-            view(self.view_x,self.view_y*factor);
-   %           md.mesh.z=md.mesh.z-8000;   %KBF
-  %md.geometry.surface=md.geometry.surface-8000;  %KBF
-   %     test5;      %KBF2
+            view(self.view_x,self.view_y*factor); 
             try
                 saveas(gcf,[self.runsPath self.finalModelFilename '/Figs/' plotType '/' plotFilename '.fig']);
             catch
@@ -386,7 +380,6 @@ classdef plottingTools
         
         function plotmultiUnit_mesh(md, varargin)
 
-            
             options=plotoptions(varargin{:});
             options=addfielddefault(options.list{1},'colorbar',0);
 

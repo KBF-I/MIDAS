@@ -201,7 +201,8 @@ classdef tools
                             else
                                 %%*Mesh*if the ISSM mesh function above does not work, we can use this. and then check and remove anything that is NaN. If using this line, delauney above is not required
                                 surfaceObs=griddata(xb,yb,surface,md.mesh.x,md.mesh.y, "nearest"); 
-                                surfaceObs(isnan(surfaceObs))=0;                                   
+                                surfaceObs(isnan(surfaceObs))=0;                                
+                                                               
                             end                   
                         else
                             if ~self.useMatlabMeshFunc
@@ -210,10 +211,33 @@ classdef tools
                                 baseObs = InterpFromMeshToMesh2d(indexb,xb,yb,base,md.mesh.x,md.mesh.y);
                                 surfaceObs=baseObs+thicknessobs;
                             else
+
+                             %   xmin = min(xt);
+                              %  xmax = max(xt);
+                               % ymin = min(yt);
+                                %ymax = max(yt);
+                              %  outOfBoundIdx = (xb < xmin | xb > xmax | yb < ymin | yb > ymax);
+                               %  
+                                %xb_out = xb(outOfBoundIdx);
+                                %yb_out = yb(outOfBoundIdx);
+                                 
+                            %    newPoints = [xb_out, yb_out, zeros(length(xb_out), 1)];  % New coordinates with thickness = 0
+                         %       thickness = [thickness; newPoints(:,3)];  % Append new points to original array
+                          %      xt=[xt ;xb_out];
+                           %     yt=[yt ;yb_out];
+
+
                                 thicknessobs=griddata(xt,yt,thickness,md.mesh.x,md.mesh.y, "nearest");
                                 thicknessobs(isnan(thicknessobs))=0;
-                                baseObs = griddata(xb,yb,base,md.mesh.x,md.mesh.y);
-                                surfaceObs=baseObs+thicknessobs;
+                        
+
+                               % currentDayThickness=readmatrix('/home/developer/Documents/ISSM/MATLABCodes/MIDAS/Inputs/MCID-MultiLayeredv5/base_v5_fixed_bis.csv');
+                           
+                               baseObs = griddata(xb,yb,base,md.mesh.x,md.mesh.y, 'nearest');
+                               
+                                
+                               
+                            surfaceObs=baseObs+thicknessobs;
                             end
                         end
 
@@ -221,20 +245,27 @@ classdef tools
                         if isempty(self.nested_domainfile)
                             md= bamg(md,'field',surfaceObs,'err',self.err,'gradation',self.gradation,'hmin',self.mainDomainMinResolution,'hmax',self.mainDomainMaxResolution);
                         else
-                            h=NaN*ones(md.mesh.numberofvertices,1);
+                           h=NaN*ones(md.mesh.numberofvertices,1);
                             
-                            % %$$  Middle Domains+
-                            % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath 'smalldomain2.exp'],2);  %Middle
-                            % h(find(in1))=3000;    %the required resolution for the second domain
-                            % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath '3Middler.exp'],2);  %Middlerr :)
-                            % h(find(in1))=300;    %the required resolution for the second domain
-                            % 
-                            % %$$  Middle Domains- 
 
-                            domainFile2=self.nested_domainfile;
+                          domainFile2=self.nested_domainfile;
 
-                            in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath domainFile2],1);
-                            h(find(in1))=self.nestedDomainRes;    %the required resolution for the second domain
+                             in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath domainFile2],1);
+                             h(find(in1))=self.nestedDomainRes;    %the required resolution for the second domain
+ 
+                             %$$  Middle Domains+
+                          % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath 'Lobate.exp'],2);   
+                          % h(find(in1))=500;    %500
+                          % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath 'Sakarya.exp'],2);  
+                          % h(find(in1))=500;    %500
+                          % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath 'GedizVallis.exp'],2);  
+                          % h(find(in1))=200;    %200
+                          % in1=ContourToNodes(md.mesh.x,md.mesh.y,[self.inputsPath 'Curiosity.exp'],2);  
+                          % h(find(in1))=35;    %35
+                             
+                             %$$  Middle Domains- 
+ 
+   
 
                             md=bamg(md,'field',surfaceObs,'err',0.02,'hmin',self.mainDomainMinResolution,'hmax',self.mainDomainMaxResolution, 'hVertices',h);
                         end
@@ -246,6 +277,7 @@ classdef tools
                             else
                                 %%*Mesh*if above was decided not to use the ISSM meshing function, then we should use matlab functions everywhere:
                                 surfaceObs=griddata(xb,yb,surface,md.mesh.x,md.mesh.y, "nearest");
+
                             end
                         else
                             if ~self.useMatlabMeshFunc
@@ -254,7 +286,7 @@ classdef tools
                             else
                                 thicknessobs=griddata(xt,yt,thickness,md.mesh.x,md.mesh.y, "nearest");
                                 thicknessobs(isnan(thicknessobs))=0;
-                                baseObs =    griddata(xb,yb,base,md.mesh.x,md.mesh.y);                                
+                                baseObs =    griddata(xb,yb,base,md.mesh.x,md.mesh.y , "nearest");                                
                             end
                             surfaceObs=baseObs+thicknessobs;
                         end
@@ -434,12 +466,13 @@ classdef tools
                 normalRsdlThrshld, icreasedRsdlThrshld, capsLimitFactor, capsOnlyBoundaries, solverEngine, nestedSolverEngine)      
             if debugMode, toolbox.debug([saveModelTitle 'b4' ], md); end
 
+
             md.verbose = verbose('solver', verboseFlag,'qmu',verboseFlag,'solution',verboseFlag, 'control', verboseFlag);
            
             try  %try1: first attempt, threshold 10e-5; entered timestep
                 md.settings.solver_residue_threshold=normalRsdlThrshld;
                 if strcmpi(modelType, 'Transient')
-                    fprintf("   - * FIRST ATTEMPT: Setting the min time step to %i and the residue threshold to %i Period Ending in %i\n\n",  md.timestepping.time_step_min, md.settings.solver_residue_threshold, md.timestepping.final_time);
+                    fprintf("   - * FIRST ATTEMPT: Setting the min time step to %i and the residue threshold to %i Period Ending in %i\n\n",  md.timestepping.time_step_min, normalRsdlThrshld, md.timestepping.final_time);
                 end
                 if nestedSolverEngine
                     md=setflowequation(md, solverEngine, [toolbox.inputsPath toolbox.nested_domainfile],'fill','SSA');  
@@ -447,12 +480,7 @@ classdef tools
                     md = setflowequation(md,solverEngine,'all');
                 end
                 md= solve(md,modelType);
-
-                %note - to load a prviously solved model from the solver do
-                %something like this here
-                %md=loadresultsfromcluster(md,'runtimename','PLUTO.-11-04-2023-23-29-35-34029');
-
-
+  %md=loadresultsfromcluster(md,'runtimename','PLUTO.-11-04-2023-23-29-35-34029');
                 %to check that the solve was successful
                 if strcmpi(modelType, 'Transient')
                     if md.results.TransientSolution(end).time~=md.timestepping.final_time
@@ -463,7 +491,7 @@ classdef tools
                 disp(Me);
                 try %try2: second attempt, threshold icreasedRsdlThrshld; entered timestep
                     md.settings.solver_residue_threshold=icreasedRsdlThrshld;  %increase to be prepared if this going to fail
-                    fprintf("   - ** SECOND ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i.\n",  md.timestepping.time_step_min, md.settings.solver_residue_threshold, md.timestepping.final_time);
+                    fprintf("   - ** SECOND ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i.\n",  md.timestepping.time_step_min,icreasedRsdlThrshld, md.timestepping.final_time);
                     md= solve(md,modelType);
                     %to check that the solve was successful
                     if strcmpi(modelType, 'Transient')
@@ -477,9 +505,9 @@ classdef tools
                         md.settings.solver_residue_threshold=icreasedRsdlThrshld;  %increase to be prepared if this going to fail
                         minTime=md.timestepping.time_step_min;
                         md.timestepping.time_step_min=0.00001;     %reduce the timestep
-
+               
                         toolbox.debug(['capture_ResultsError_3_' int2str(md.timestepping.start_time)], md);   %just capture what this is; if this fails again, we can see what it was.
-                        fprintf("   - *** THIRD ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i. \n",  md.timestepping.time_step_min, md.settings.solver_residue_threshold, md.timestepping.final_time);
+                        fprintf("   - *** THIRD ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i. \n",  md.timestepping.time_step_min, icreasedRsdlThrshld, md.timestepping.final_time);
                         md=solve(md,modelType);
                         %to check that the solve was successful
                         if strcmpi(modelType, 'Transient')
@@ -489,13 +517,13 @@ classdef tools
                         end
                         md.timestepping.time_step_min=minTime;
                     catch %catch 3: Fourth attemtp, the same as above with threshold of 0.001
-                        md.settings.solver_residue_threshold=0.01;  %increase to be prepared if this going to fail
+                        md.settings.solver_residue_threshold=0.9;  %increase to be prepared if this going to fail
                         minTime=md.timestepping.time_step_min;
                         md.timestepping.time_step_min=0.000001;     %reduce the timestep
-                        md=md.collapse();                          %use the auxiliary extrude
-                        md=md.extrudeModel(1);                     %this is experimental, and most probably will fail anyways. 
                         toolbox.debug(['capture_ResultsError_4_' int2str(md.timestepping.start_time)], md);   %just capture what this is; if this fails again, we can see what it was.
-                        fprintf("   - **** Fourth ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i. \n",  md.timestepping.time_step_min, md.settings.solver_residue_threshold, md.timestepping.final_time);
+                        fprintf("   - **** Fourth ATTEMPT: Setting the min time step to %i and the residue threshold to %i. Period ending in %i. \n",  md.timestepping.time_step_min, 0.9, md.timestepping.final_time);
+                                md=md.collapse();                          %use the auxiliary extrude
+                        md=md.extrudeModel(1);
                         md=solve(md,modelType);
                         %to check that the solve was successful
                         if strcmpi(modelType, 'Transient')
@@ -611,7 +639,17 @@ classdef tools
             fclose(timelogTextFile);
         end
 
-        function title=saveMe (self,  objToSave    )
+        function title=saveMe (self,  objToSave)
+
+         try
+                 ids = [objToSave.uniqueTransientSolutions.time];
+               divisible_by_100_idx = mod(ids, objToSave.settings.output_frequency) == 0;
+          rows_to_keep = find(divisible_by_100_idx);
+             rows_to_keep_full=[rows_to_keep numel(objToSave.uniqueTransientSolutions)];  rows_to_keep_full=sort(unique(rows_to_keep_full));
+              objToSave.uniqueTransientSolutions = objToSave.uniqueTransientSolutions(rows_to_keep_full);
+          catch
+           end
+
             savemodel(self.org,objToSave);
             title = [self.saveModelsFolder 'self_'  self.org.prefix self.org.steps(self.org.currentstep).string '.mat'];
             save (title, 'self');
@@ -905,9 +943,7 @@ classdef tools
             md.geometry.bed            =  self.solutions(Year).Base;         
             md.mesh                    =  self.solutions(Year).Mesh;
             md.multiIceMesh            =  self.solutions(Year).MultiIceMesh;
-            if numel(md.materials.rheology_B) ~= md.mesh.numberofelements
-                md.materials.rheology_B    =  md.materials.rheology_B(1).*ones(md.mesh.numberofelements,1);
-            end
+            md.materials.rheology_B    =  md.materials.rheology_B.*ones(md.mesh.numberofelements,1);
             md.initialization.vx       = self.solutions(Year).Vx;
             md.initialization.vy       = self.solutions(Year).Vy;
             md.initialization.vz       = self.solutions(Year).Vz;

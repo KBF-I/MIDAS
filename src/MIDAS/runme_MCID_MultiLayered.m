@@ -26,9 +26,9 @@ mp.planetName           = planetProperties.MARS;                             % t
 mp.numb_MeshVirtualLayers = 5; 
 mp.initialMeshRes       = 3000;                                              %! [m] initial triangle base resolution. Maximum 10 times that of the very minimum res used anywhere in the mesh
 mp.mainDomainFile       = 'maindomain.exp';                                %! The main domain file name.
-mp.mainDomainMinRes     = 6000;                                             %!
-mp.mainDomainMaxRes     = 7500;                                             %! the minimum and maximum resolutions in the main domain area
-mp.nestedDomainFile     = 'nesteddomain.exp';                                %  nested domain area if there is one; leave it "empty" if there is none.
+mp.mainDomainMinRes     = 4000;                                             %!
+mp.mainDomainMaxRes     = 6000;                                             %! the minimum and maximum resolutions in the main domain area
+mp.nestedDomainFile     = '2.exp';%nesteddomain.exp';%'smalldomain.exp';                                  %  nested domain area if there is one; leave it "empty" if there is none.
 mp.nestedDomainRes      = 3500;                                              %  [m] the resolution of the nested domain area
 mp.fullThicknessesListFileName = 'fullThicknessesList.mat'; 
 
@@ -36,14 +36,14 @@ onlyPlot                = false;                                             %  
 mp.RunSimulation        = ~onlyPlot;                                         %  set it to false, if it is neither only plot nor running the simulation
 mp.DrawMesh             = false;
 mp.plotView_x           = 0;           mp.plotView_y = 90;                %  used only if onlyPlot=true   -120/60
+Boundaries              = [0,600; 0,0.7; 150,190; -1,-1];                % Boundaries define the scale boundaries for plots; use -1 in at least x or y of one, to ignore and use max and min from the available data. The structure is ...
 % Boundaries=[minThickness, maxThickness;minVel, maxVel; minTemperature, maxTemperature; minquiver, maxquiver]
-Boundaries              = [-1,-1;-1,-1;-1,-1; -1,-1];                % Boundaries define the scale boundaries for plots; use -1 in at least x or y of one, to ignore and use max and min from the available data. The structure is ...
-xlim=[-1 -1];           ylim=[-1 -1];                                            % Use these to zoom into an area in the plot; use -1 for any one of the 4 numbers to plot the entire domain
+xlim=[-2.73e5 -1.1e5] ;    ylim=[-3.5e4 1.9e5];                              % Use these to zoom into an area in the plot; use -1 for any one of the 4 numbers to plot the entire domain
 makeMovie               = true;                                              % set to true to make vidoes from the plots that have been created.
 
 mp.resumeAfterFailure   = true;                                              %  restarts from <year> in _<outputFolderName>_start_from_<year>. TransientStartingYr needs to be 0 or this flag will be ingnored and the process will start from  that year
 mp.transientStartingYr  = 0;                                                 %! starting year - 0: if it starts from year 0, or to use the folder name. IF there is a number here, it will take precedence over the folder name 
-mp.useSMB2EndOfYear     = 145000;                                                 %! up to this year, MIDAS will use SMBs
+mp.useSMB2EndOfYear     = 57000;                                                 %! up to this year, MIDAS will use SMBs
 mp.useSMB_to_CallSolver = false;                                             %  true means after the year in the variable above, only for the top units SMBs will be used. 
 mp.SMBYrs2CallSolver    = 5;                                                %  the year time steps if the variable above it true
 mp.noSMBYrs2CallSolver  = 10;                                                 %  every this # of year the solver will be called, when SMB is not used
@@ -52,7 +52,7 @@ mp.maxTimeStep          = 5;                                                %  t
 mp.outputFreq           = 100;                                                %  the solver will produce out put every this number of years 
 
 mp.capThicknessLimitFactor=50000;      mp.capThicknessOnlyOnBoundaries=true; %limit the thickness of any node if it reaches this limit: median(thicknesses)*capsThicknessLimitFactor
-mp.geoFlux              = 0.03;        mp.SolverEngine         = 'HO';     
+mp.geoFlux              = 0.03;       mp.SolverEngine         = 'HO';     
 mp.thicknessThreshold   = 1.0;         mp.thickness_minThreshld= 0.001;
 mp.normalRsdlThrshld    = 1e-3;        mp.icreasedRsdlThrshld  = 1e-1;     
 
