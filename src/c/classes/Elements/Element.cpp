@@ -1245,7 +1245,7 @@ void       Element::FindParam(int* pvalue,int paramenum){/*{{{*/
 
 	#ifdef _IS_MULTI_ICE_
 	IssmDouble temp=this->material->GetMaterialValue( paramenum);
-	if (!isnan(temp)) 
+	if (!xIsNan<IssmDouble>(temp)) 
 	{ 
 	    int i=(int)temp;
 		*pvalue=i;
@@ -1260,7 +1260,7 @@ void       Element::FindParam(IssmDouble* pvalue,int paramenum){/*{{{*/
 IssmDouble Element::FindParam(int paramenum){/*{{{*/
 #ifdef _IS_MULTI_ICE_
 	IssmDouble temp=this->material->GetMaterialValue(paramenum);
-	if (isnan(temp)) temp = this->parameters->FindParam(paramenum);
+	if (xIsNan<IssmDouble>(temp)) temp = this->parameters->FindParam(paramenum);
 	return temp;
 #else	
 	return this->parameters->FindParam(paramenum);
@@ -5742,13 +5742,13 @@ IssmDouble Element::TMeltingPoint(IssmDouble pressure){/*{{{*/
 #ifdef _IS_MULTI_ICE_
 	parameters->FindParam(this, &beta,MaterialsBetaEnum);
 
-	if (isnan(beta)) { 
+	if (xIsNan<IssmDouble>(beta)) { 
 #endif
 		parameters->FindParam(&beta,MaterialsBetaEnum); 
 #ifdef _IS_MULTI_ICE_
 	}
 	parameters->FindParam(this, &meltingpoint,MaterialsMeltingpointEnum);
-	if (isnan(meltingpoint))
+	if (xIsNan<IssmDouble>(meltingpoint))
 #endif
 		parameters->FindParam(&meltingpoint,MaterialsMeltingpointEnum);
 
