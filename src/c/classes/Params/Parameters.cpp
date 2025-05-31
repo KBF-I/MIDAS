@@ -289,7 +289,7 @@ void Parameters::FindParam(IssmDouble* pscalar,int param_enum){ _assert_(this);/
 void Parameters::FindParam(Element* element, IssmDouble* pscalar,int param_enum){ _assert_(this);/*{{{*/
 
 	IssmDouble temp=element->material->GetMaterialValue(param_enum);
-	if (!isnan(temp)) 
+	if (!xIsNan<IssmDouble>(temp)) 
 		*pscalar=temp;
 	else 
 		this->FindParam(pscalar, param_enum);
@@ -467,7 +467,7 @@ IssmDouble Parameters::FindParam(int param_enum){ _assert_(this);/*{{{*/
 #ifdef _IS_MULTI_ICE_
 IssmDouble Parameters::FindParam(Element* element, int param_enum){ _assert_(this);/*{{{*/
 	IssmDouble temp=element->material->GetMaterialValue(param_enum);
-	if (isnan(temp))  temp=this->FindParam(param_enum);	
+	if (xIsNan<IssmDouble>(temp))  temp=this->FindParam(param_enum);	
 
 	return temp;
 }
