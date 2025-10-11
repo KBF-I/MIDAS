@@ -6,7 +6,7 @@ doi: 10.5281/zenodo.17329138
 date-released: 2025-10-10
 url: "https://github.com/KBF-I/MIDAS"
 repository-code: "https://github.com/KBF-I/MIDAS"
-license: "MIT"
+license: "BSD-3-Clause"
 authors:
   - family-names: Fard
     given-names: Kasra B.
