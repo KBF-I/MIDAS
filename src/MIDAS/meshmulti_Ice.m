@@ -158,7 +158,14 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
 
             %if we are using SMBs clean up and leave
             if md.materials.useSMB
-                if newUnit, md=md.multiIceMesh.setUnits_Elements(md, true);end
+              if newUnit, md=md.multiIceMesh.setUnits_Elements(md, true);end
+                if ~md.multiIceMesh.isModel3D
+                    if length(md.smb.mass_balance)<2
+                       md.smb.mass_balance=zeros(md.mesh.numberofvertices);
+                    end
+                    md=md.extrudeModel(2);
+                end 
+
                 %we are using smbs, so do not modify the geometry.
                 return
             end
@@ -254,7 +261,11 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
                 for k=md.multiIceMesh.currentIceUnitsCnt:-1:3
                     if md.multiIceMesh.iceUnits(k).IceType==mat_consts.H2O && ... % If the top material is H2O, and immidiately  below is CO2
                             md.multiIceMesh.iceUnits(k-1).IceType==mat_consts.CO2
-                        M=find(md.multiIceMesh.iceUnits(k-1).Thickness<=0.05); %   the find all nodes where the unit blow has 0 thickness
+                        M=find(md.multiIceMesh.iceUnits(k-1).Thickness<=1); %   the find all nodes where the unit blow has 0 thickness
+                        md.multiIceMesh.iceUnits(k-1).Thickness(md.multiIceMesh.iceUnits(k-1).Thickness<=1)=1;
+                        md.multiIceMesh.iceUnits(k-1).Surface=md.multiIceMesh.iceUnits(k-1).Bed+md.multiIceMesh.iceUnits(k-1).Thickness;
+                        md.multiIceMesh.iceUnits(k).Bed=md.multiIceMesh.iceUnits(k-1).Surface;
+                        md.multiIceMesh.iceUnits(k).Surface=md.multiIceMesh.iceUnits(k).Thickness+md.multiIceMesh.iceUnits(k).Bed;
                         if size(M, 1)>=0.25*md.mesh.numberofvertices  % 25% of vertices have a close to 0 thickness now
 
                             %move the thickness of the two top layers
@@ -264,6 +275,11 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
                             %now remove the top two units
                             md.multiIceMesh.iceUnits(end)=[];md.multiIceMesh.iceUnits(end)=[];
                             break;
+                        elseif size(M, 1)>0 && size(M, 1)<0.25*md.mesh.numberofvertices
+                                md.multiIceMesh.iceUnits(k-1).Thickness(md.multiIceMesh.iceUnits(k-1).Thickness<=1)=1;
+                        md.multiIceMesh.iceUnits(k-1).Surface=md.multiIceMesh.iceUnits(k-1).Bed+md.multiIceMesh.iceUnits(k-1).Thickness;
+                        md.multiIceMesh.iceUnits(k).Bed=md.multiIceMesh.iceUnits(k-1).Surface;
+                        md.multiIceMesh.iceUnits(k).Surface=md.multiIceMesh.iceUnits(k).Thickness+md.multiIceMesh.iceUnits(k).Bed;
                         end
                     end
                 end
@@ -276,7 +292,7 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
             b=md.multiIceMesh.iceUnits(1).Bed;
 
             temp_thickness=s-b;
-            temp_thickness(temp_thickness<0)=0;%threshold; %%0.5;%%
+            temp_thickness(temp_thickness<0.5)=0.5;%threshold; %%0.5;%%
             md.geometry.surface =b+temp_thickness;
             md.geometry.bed=b;
             md.geometry.base=b;
@@ -314,7 +330,12 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
                     if md.multiIceMesh.isModel3D, md=md.collapse(); end
                     E=md.mesh.numberofelements;
                     for UID=1:md.multiIceMesh.currentIceUnitsCnt
+                       
                         numblayer=md.multiIceMesh.iceUnits(UID).NmbLayers - 1;
+                        if numblayer<=1
+                            numblayer=md.multiIceMesh.min_numLayers-1;
+                        end
+
                         md.multiIceMesh.iceUnits(UID).startingElementID=1;
                         if UID~=1, md.multiIceMesh.iceUnits(UID).startingElementID=md.multiIceMesh.iceUnits(UID-1).endingElementID+1;end
                         md.multiIceMesh.iceUnits(UID).endingElementID=md.multiIceMesh.iceUnits(UID).startingElementID+E*numblayer-1;
@@ -337,6 +358,10 @@ if unitPos<md.multiIceMesh.currentIceUnitsCnt, md.multiIceMesh.iceUnits(end).Bed
             E=md.mesh.numberofelements2d;
             for UID=1:md.multiIceMesh.currentIceUnitsCnt
                 numblayer=md.multiIceMesh.iceUnits(UID).NmbLayers - 1;
+                 
+                        if numblayer<1
+                            numblayer=md.multiIceMesh.min_numLayers-1;
+                        end
                 md.multiIceMesh.iceUnits(UID).startingElementID=1;
                 if UID~=1, md.multiIceMesh.iceUnits(UID).startingElementID=md.multiIceMesh.iceUnits(UID-1).endingElementID+1;end
                 md.multiIceMesh.iceUnits(UID).endingElementID=md.multiIceMesh.iceUnits(UID).startingElementID+E*numblayer-1;

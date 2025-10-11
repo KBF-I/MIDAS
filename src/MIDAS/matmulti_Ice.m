@@ -492,11 +492,17 @@ classdef matmulti_Ice < matice
             pressure = zeros(md.mesh.numberofvertices,1);
            
             for j=1:md.multiIceMesh.currentIceUnitsCnt 
+          
                 Cnst_Rho_G=md.materials.getRhoIce(md.multiIceMesh.iceUnits(j).IceType, 170);
                 [s, finalVertex]=md.multiIceMesh.getUnitVerticesRange(j, md);
 
-                 surfaces=repmat(md.multiIceMesh.iceUnits(j).Surface, md.multiIceMesh.iceUnits(j).NmbLayers,1);
+                nmbLayers=md.multiIceMesh.iceUnits(j).NmbLayers;
+                if nmbLayers<=1 
+                    nmbLayers=md.multiIceMesh.min_numLayers;
+                end
+                 surfaces=repmat(md.multiIceMesh.iceUnits(j).Surface, nmbLayers,1);
                  vertexHeight_G=md.constants.g.*(surfaces - md.mesh.z(s:finalVertex));
+            
                  if any(isnan(md.initialization.temperature))
                         pressure(s:finalVertex)=Cnst_Rho_G.*vertexHeight_G;
                  else

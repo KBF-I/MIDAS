@@ -166,7 +166,7 @@ classdef Stratified_iceModel
             if ~self.SavePlots, pause('off'); end
             %fprintf(['\nThe Solver Engine is: ' self.SolverEngine '\n']);
             fprintf('Simulation starting ...\n\n');
-            [self, self.md]=self.Parameterization(self.md);
+            self=self.Parameterization();
             try
                 if ~self.SavePlots, pause('off'); end
                 self.initializeModel  = true;
@@ -284,11 +284,18 @@ classdef Stratified_iceModel
                             TotalLayers=TotalLayers+self.md.multiIceMesh.iceUnits(cc).NmbLayers;
                         end
                         TotalLayers=TotalLayers-self.md.multiIceMesh.currentIceUnitsCnt+1;
+                        try
                         if currentIceType~=self.md.multiIceMesh.iceUnits(end).IceType && self.md.multiIceMesh.currentPeriodThickness(1)>0        
                             TotalLayers=TotalLayers+tempUnit.NmbLayers-1;
-                        end 
+                        end
+                        catch
+                                  TotalLayers=TotalLayers+tempUnit.NmbLayers-1;
+                        end
 
-                        tempPeriodSMBs=repmat(self.md.multiIceMesh.currentPeriodThickness./((self.toolbox.finalTimeVector(idx)-startingPoint)),TotalLayers,1);
+denominator = (self.toolbox.finalTimeVector(idx)-startingPoint);
+if denominator == 0, denominator=1; end
+
+                        tempPeriodSMBs=repmat(self.md.multiIceMesh.currentPeriodThickness./(denominator),TotalLayers,1);
             
                         topUnit= (self.md.multiIceMesh.currentIceUnitsCnt==0) || (self.md.multiIceMesh.currentIceUnitsCnt>0 && currentIceType==self.md.multiIceMesh.iceUnits(end).IceType);
                                                 
@@ -296,13 +303,13 @@ classdef Stratified_iceModel
                         if (self.useSMB2EndOfYear > 0 && self.useSMB2EndOfYear >= self.toolbox.finalTimeVector(idx)) || ...
                            (topUnit && self.useSMB_to_CallSolver)
                             self.md.materials.useSMB=true;
-                            self.md.smb.mass_balance=tempPeriodSMBs;
-                            tempUnit.Thickness=0.*self.md.multiIceMesh.currentPeriodThickness;
+                            self.md.smb.mass_balance=tempPeriodSMBs(1)*ones(self.md.mesh.numberofvertices,1);
+                            tempUnit.Thickness=0.0000001.*self.md.multiIceMesh.currentPeriodThickness;
                             fprintf ('   - Using SMBs; SMB=%i\n', tempPeriodSMBs(1));
 
                         else
                             self.md.materials.useSMB=false;
-                            self.md.smb.mass_balance=0.*tempPeriodSMBs;
+                            self.md.smb.mass_balance=zeros(self.md.mesh.numberofvertices,1);
                             tempUnit.Thickness=self.md.multiIceMesh.currentPeriodThickness;
                             fprintf ('   - Without using SMBs; Thickness Change=%i\n',tempUnit.Thickness(1));
                             self.md.smb.mass_balance=zeros(self.md.mesh.numberofvertices,1);
@@ -331,14 +338,17 @@ classdef Stratified_iceModel
 
                         if self.md.multiIceMesh.impactedUnit ==-1, continue, end
                         if self.initializeModel
+                            
                             self.md.initialization.temperature = self.toolbox.surfaceTempVector(1)*ones(self.md.mesh.numberofvertices,1);
                             self.md.initialization.pressure=matmulti_Ice.multiUnitPressure_In3D(self.md);
                             self.md.timestepping.start_time=0;
                             self.md.timestepping.final_time=1;
-                            self.md.timestepping.time_step=0;
+                            self.md.timestepping.time_step=0; 
+                            self.md.materials = self.md.materials.setIceProperties(self.md); 
 
                             if self.RunSimulation
                                 modelType='Thermal';
+                                  self.md.thermal.spctemperature(self.md.mesh.vertexonsurface==1) = self.toolbox.surfaceTempVector(idx);
                                 [self.md, self.toolbox]=self.toolbox.solveModel(self.md, currentIceType ,'0', ...
                                     self.verboseFlag, self.debugging, modelType, self.normalRsdlThrshld, self.icreasedRsdlThrshld,...
                                     self.capThicknessLimitFactor, self.capThicknessOnlyOnBoundaries, self.SolverEngine, self.nestedSolverEngine);
@@ -837,56 +847,57 @@ function self=runModel(self, loadStep)
 %            self.md = setflowequation(self.md,self.SolverEngine,'all');
         end
 
-        function [self, model]=Parameterization (self,model)
+        function self=Parameterization (self)
             % Parameters
             %config settings that have to be set before running thev transient
-            model.stressbalance.restol =self.md.settings.stressbalance_restol;% 2e-4; %default is 1e-4; error mgmt
-            model= setmask(model,'',''); % all ice is grounded
+            self.md.stressbalance.restol =self.md.settings.stressbalance_restol;% 2e-4; %default is 1e-4; error mgmt
+            self.md= setmask(self.md,'',''); % all ice is grounded
             % Defining friction parameters
             c=self.md.settings.frictionCoeff;
-            model.friction.coefficient = c*ones(model.mesh.numberofvertices,1);   
+            self.md.friction.coefficient = c*ones(self.md.mesh.numberofvertices,1);   
 
-            pos = model.mask.ocean_levelset<0; % all logical 0s, ice is all grounded
+            pos = self.md.mask.ocean_levelset<0; % all logical 0s, ice is all grounded
              
-            model.friction.coefficient(pos) = 0; % no changes, in theory...
-            model.friction.p = ones(model.mesh.numberofelements,1);
-            model.friction.q = ones(model.mesh.numberofelements,1);
+            self.md.friction.coefficient(pos) = 0; % no changes, in theory...
+            self.md.friction.p = ones(self.md.mesh.numberofelements,1);
+            self.md.friction.q = ones(self.md.mesh.numberofelements,1);
             % Init
-            model.initialization.vx  = zeros(model.mesh.numberofvertices,1);
-            model.initialization.vy  = zeros(model.mesh.numberofvertices,1);
-            model.initialization.vz  = zeros(model.mesh.numberofvertices,1);
-            model.initialization.vel = zeros(model.mesh.numberofvertices,1);
+            self.md.initialization.vx  = zeros(self.md.mesh.numberofvertices,1);
+            self.md.initialization.vy  = zeros(self.md.mesh.numberofvertices,1);
+            self.md.initialization.vz  = zeros(self.md.mesh.numberofvertices,1);
+            self.md.initialization.vel = zeros(self.md.mesh.numberofvertices,1);
             % Basal forcings
-            model.basalforcings.groundedice_melting_rate = zeros(model.mesh.numberofvertices,1);
-            model.basalforcings.floatingice_melting_rate = zeros(model.mesh.numberofvertices,1);
+            self.md.basalforcings.groundedice_melting_rate = zeros(self.md.mesh.numberofvertices,1);
+            self.md.basalforcings.floatingice_melting_rate = zeros(self.md.mesh.numberofvertices,1);
             % Moving front
-            model.levelset.spclevelset = NaN*ones(model.mesh.numberofvertices,1);
+            self.md.levelset.spclevelset = NaN*ones(self.md.mesh.numberofvertices,1);
             % Inversion
-            model.inversion.iscontrol = 0;
+            self.md.inversion.iscontrol = 0;
             % Some extra initial conditions
             
-            model.stressbalance.referential = NaN*ones(model.mesh.numberofvertices,6);
-            model.stressbalance.loadingforce = zeros(model.mesh.numberofvertices, 3);
-            model.stressbalance.abstol = NaN;
+            self.md.stressbalance.referential = NaN*ones(self.md.mesh.numberofvertices,6);
+            self.md.stressbalance.loadingforce = zeros(self.md.mesh.numberofvertices, 3);
+            self.md.stressbalance.abstol = NaN;
 
-            model.toolkits.DefaultAnalysis = bcgslbjacobioptions();
+            self.md.toolkits.DefaultAnalysis = bcgslbjacobioptions();
 
 %Debug            model.transient.issmb = 0;
-            model.transient.ismasstransport = 1;
-            model.transient.isstressbalance = 1;
-            model.transient.isthermal = 1;
-            model.transient.isgroundingline = 0;
-            model.transient.isesa = 0;
-            model.transient.isdamageevolution = 0;
-            model.transient.ismovingfront = 0;
-            model.transient.ishydrology = 0;
-            model.transient.isoceancoupling = 0;
-            model.transient.amr_frequency = 0;
-            model.transient.requested_outputs = {'default','IceVolume','TotalSmb','SmbMassBalance', 'BasalStress'};
-            model.stressbalance.maxiter = 100;
+            self.md.transient.ismasstransport = 1;
+            self.md.transient.isstressbalance = 1;
+            self.md.transient.isthermal = 1;
+            self.md.transient.isgroundingline = 0;
+            self.md.transient.isesa = 0;
+            self.md.transient.isdamageevolution = 0;
+            self.md.transient.ismovingfront = 0;
+            self.md.transient.ishydrology = 0;
+            self.md.transient.isoceancoupling = 0;
+            self.md.transient.amr_frequency = 0;
+            self.md.transient.requested_outputs = {'default','IceVolume','TotalSmb','SmbMassBalance'};
+            self.md.stressbalance.maxiter = 100;
 
-            model.settings.output_frequency =  self.outputFreq;
-            model.stressbalance.maxiter = 100;
+            self.md.settings.output_frequency =  self.outputFreq;
+            self.md.stressbalance.maxiter = 100;
+
 
             %Boundary conditions: temperature is fixed at the surface
             self.md.thermal.spctemperature = NaN*ones(self.md.mesh.numberofvertices,1);
