@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "MIDAS: Multi-unit Ice Deposits Analysis and Simulation"
+version: "Gen-1"
+doi: 10.5281/zenodo.17329138
+date-released: 2025-10-10
+url: "https://github.com/KBF-I/MIDAS"
+repository-code: "https://github.com/KBF-I/MIDAS"
+license: "MIT"
+authors:
+  - family-names: Fard
+    given-names: Kasra B.
+    affiliation: "York University, Toronto, Canada"
+    orcid: "0000-0000-0000-0000"
+  - family-names: Smith
+    given-names: Isaac B.
+    affiliation: "Planetary Science Institute, Tucson, AZ, USA; York University, Toronto, Canada"
+    orcid: "0000-0002-XXXX-XXXX"
+abstract: >
+  MIDAS (Multi-unit Ice Deposits Analysis and Simulation) is a 3D thermo-mechanical
+  ice-sheet modelling framework developed as an extension of the Ice-sheet and Sea-level
+  System Model (ISSM). It enables simulation of stratified ice masses composed of
+  alternating H₂O and CO₂ ice units, capturing rheological, thermal, and dynamic
+  contrasts relevant to the Massive CO₂ Ice Deposits (MCID) at Mars’ South Pole.
+  MIDAS incorporates temperature-dependent rheologies, density, and thermal conductivity
+  variations to study the formation, stability, and flow dynamics of exotic planetary
+  ices.
+preferred-citation:
+  type: software
+  authors:
+    - family-names: Fard
+      given-names: Kasra B.
+    - family-names: Smith
+      given-names: Isaac B.
+  title: "MIDAS: Multi-unit Ice Deposits Analysis and Simulation (Gen-1)"
+  version: "Gen-1"
+  doi: 10.5281/zenodo.17329138
+  date-released: 2025-10-10
+  url: "https://doi.org/10.5281/zenodo.17329138"
