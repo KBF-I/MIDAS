@@ -51,13 +51,13 @@ classdef planetProperties
 
                 case planetProperties.MARS
                     md.materials.earth_density       = 3930;           md.constants.g   = 3.72;
-                    md.constants.omega               = 1.1324*1e-5;    md.constants.yts = 687.*24.*3600.;
+                    md.constants.omega               = 7.1*1e-5;    md.constants.yts = 687.*24.*3600.;
                     md.constants.referencetemperature= 223.15;         
                     radius_a                         = 3396200;        radius_b         = 3376200;
 
                 case planetProperties.PLUTO
                     md.materials.earth_density       = 1854;            md.constants.g   = 0.62;
-                    md.constants.omega               = 1.755*1e-6;      md.constants.yts = 90560.*24.*3600.;
+                    md.constants.omega               = 1.14*1e-5;      md.constants.yts = 90560.*24.*3600.;
                     md.constants.referencetemperature= 223.15;          
                     radius_a                         = 1188300;        radius_b          = 1188300;
 
